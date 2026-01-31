@@ -674,6 +674,82 @@
             transform: translateY(4px);
             box-shadow: none;
         }
+
+        /* --- モバイル対応 --- */
+        @media screen and (max-width: 500px) {
+            #battle-field {
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 10px;
+                gap: 0;
+            }
+
+            .sprite-window {
+                width: 150px;
+                height: 180px;
+                order: 1;
+            }
+
+            #enemy-area {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 10px;
+                align-self: center;
+                order: 0;
+            }
+
+            .esujira-wrapper,
+            .concon-wrapper,
+            .moguron-wrapper {
+                transform: scale(0.9);
+            }
+
+            .waruislyme-wrapper {
+                transform: scale(0.7);
+            }
+
+            .tatorun-wrapper {
+                transform: scale(0.8);
+            }
+
+            @keyframes slime-float {
+
+                0%,
+                100% {
+                    transform: scale(0.7) translateY(0px) scaleX(1);
+                }
+
+                50% {
+                    transform: scale(0.7) translateY(5px) scaleX(1.05);
+                }
+            }
+
+            #ui-panel {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+
+            #battle-q-box {
+                font-size: 2.5rem;
+                margin-bottom: 15px;
+            }
+
+            #battle-input {
+                font-size: 1.5rem;
+                width: 80px;
+            }
+
+            .battle-btn {
+                font-size: 1.2rem;
+                padding: 8px 20px;
+            }
+
+            #char-switch-btn {
+                width: 50px;
+                height: 50px;
+                top: -25px;
+            }
+        }
     </style>
 </head>
 
