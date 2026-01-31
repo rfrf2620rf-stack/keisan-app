@@ -874,8 +874,18 @@
         /* =========================================
            共通・初期設定
            ========================================= */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
         const synth = window.speechSynthesis;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('AudioContext not supported');
+                }
+            }
+        }
 
         // ゲーム状態
         let level = 1;
@@ -924,6 +934,8 @@
         }
 
         function playSound(type) {
+            initAudioContext();
+            if (!audioCtx) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
