@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エスジラの計算バトル - 迫力サイズ版</title>
+    <link rel="stylesheet" href="css/esujira.css">
+    <link rel="stylesheet" href="css/waruislyme.css">
+    <link rel="stylesheet" href="css/concon.css">
+    <link rel="stylesheet" href="css/tatorun.css">
+    <link rel="stylesheet" href="css/moguron.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* より明るく洗練されたグラデーション */
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(to bottom, #a8c0ff, #3f2b96);
+            /* 明るく爽やかなグラデーション */
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- キャラクター表示調整 --- */
+
+        /* エスジラ (左側・手前) */
+        .esujira-wrapper {
+            /*  static positioning within flex item */
+            transform: scale(1.3);
+            transform-origin: bottom center;
+            /* 足元基準 */
+            transition: transform 0.2s;
+        }
+
+        /* コンコン (左側・手前) - エスジラと切り替え */
+        .concon-wrapper {
+            transform: scale(1.3);
+            transform-origin: bottom center;
+            transition: transform 0.2s;
+            display: none;
+            /* 初期は非表示 */
+        }
+
+        .concon-wrapper.active {
+            display: block;
+        }
+
+        /* モグロン (左側・手前) - エスジラ、コンコンと切り替え */
+        .moguron-wrapper {
+            transform: scale(1.3);
+            transform-origin: bottom center;
+            transition: transform 0.2s;
+            display: none;
+        }
+
+        .moguron-wrapper.active {
+            display: block;
+        }
+
+        /* わるいスライム (右側・奥) */
+        .waruislyme-wrapper {
+            transform: scale(0.96);
+            transform-origin: bottom center;
+        }
+
+        /* タトルン (ボス・右側・奥) */
+        .tatorun-wrapper {
+            transform: scale(1.2);
+            transform-origin: bottom center;
+            display: none;
+            /* 初期は非表示 */
+        }
+
+        .tatorun-wrapper.active {
+            display: block;
+        }
+
+
+        /* 敵の待機アニメーション */
+        .anim-enemy-idle {
+            animation: slime-float 3s ease-in-out infinite;
+        }
+
+        @keyframes slime-float {
+
+            /* スケール値に合わせてアニメーションも調整 */
+            0%,
+            100% {
+                transform: scale(0.96) translateY(0px) scaleX(1);
+            }
+
+            50% {
+                transform: scale(0.96) translateY(10px) scaleX(1.05);
+            }
+        }
+
+        /* エスジラのアニメーション（スケール1.3に合わせて調整） */
+        .esujira-wrapper.active {
+            display: block;
+        }
+
+        .esujira-wrapper {
+            display: none;
+        }
+
+        /* クラス制御で表示切り替え */
+
+        .anim-stand {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .anim-run {
+            animation: hop 0.5s infinite;
+        }
+
+        .anim-attack {
+            animation: lunge 0.3s ease-out;
+        }
+
+        .anim-damage {
+            animation: shake-char 0.4s;
+            filter: sepia(1) hue-rotate(-50deg) saturate(3);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                top: -50px;
+            }
+
+            50% {
+                top: -60px;
+            }
+        }
+
+        @keyframes hop {
+
+            0%,
+            100% {
+                top: -50px;
+            }
+
+            50% {
+                top: -70px;
+            }
+        }
+
+        @keyframes lunge {
+            0% {
+                left: -10px;
+            }
+
+            50% {
+                left: 40px;
+            }
+
+            100% {
+                left: -10px;
+            }
+        }
+
+        @keyframes shake-char {
+
+            0%,
+            100% {
+                transform: scale(1.3) translateX(0);
+            }
+
+            25% {
+                transform: scale(1.3) translateX(-20px);
+            }
+
+            75% {
+                transform: scale(1.3) translateX(20px);
+            }
+        }
+
+        /* アイコン用 */
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .icon-esujira {
+            transform: scale(0.2);
+            transform-origin: top left;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+
+        /* キャラ切り替えボタン */
+        #char-switch-btn {
+            position: absolute;
+            top: -30px;
+            /* パネルの上に少しはみ出す感じで配置 */
+            left: 10px;
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            /* 背景白で見やすく */
+            border: 3px solid #ff0080;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        #char-switch-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mini-char-preview {
+            transform: scale(0.15);
+            transform-origin: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -2px;
+            margin-left: -2px;
+        }
+
+
+
+        /* --- バトル画面レイアウト --- */
+        #battle-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: filter 0.3s;
+        }
+
+        #battle-field {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: space-around;
+            /* 間隔を均等に */
+            align-items: center;
+            /* 垂直方向中央寄せ */
+            /* 端と端に配置 */
+            padding: 0 20px 40px 20px;
+            /* 余白調整 */
+            box-sizing: border-box;
+        }
+
+        .sprite-window {
+            width: 200px;
+            /* サイズ調整 */
+            height: 250px;
+            overflow: visible;
+            position: relative;
+            /* 背景色つけるとわかりやすいが透明で */
+        }
+
+        /* 敵エリア */
+
+
+        #enemy-area {
+            width: 150px;
+            height: 150px;
+            background: transparent;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            align-self: flex-end;
+            margin-bottom: 50px;
+        }
+
+        .enemy-hit .waruislyme-wrapper {
+            animation: enemy-shake 0.5s !important;
+            filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5);
+        }
+
+        .enemy-hit .tatorun-wrapper {
+            animation: enemy-shake 0.5s !important;
+            filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5);
+        }
+
+        @keyframes enemy-shake {
+            0% {
+                transform: scale(0.96) translate(0, 0);
+            }
+
+            20% {
+                transform: scale(0.96) translate(-20px, 0);
+            }
+
+            40% {
+                transform: scale(0.96) translate(20px, 0);
+            }
+
+            60% {
+                transform: scale(0.96) translate(-20px, 0);
+            }
+
+            80% {
+                transform: scale(0.96) translate(20px, 0);
+            }
+
+            100% {
+                transform: scale(0.96) translate(0, 0);
+            }
+        }
+
+        /* UI */
+        #ui-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            width: 90%;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #d88aff;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            /* ボタンの基準位置に */
+        }
+
+        #battle-q-box {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #a020f0;
+        }
+
+        #battle-input {
+            font-size: 2rem;
+            width: 100px;
+            text-align: center;
+            border: none;
+            border-radius: 10px;
+            padding: 5px;
+            color: #2c003e;
+        }
+
+        .battle-btn {
+            font-size: 1.5rem;
+            padding: 10px 30px;
+            background: linear-gradient(45deg, #a020f0, #ff0080);
+            border: none;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-left: 10px;
+            box-shadow: 0 5px 0 #500080;
+        }
+
+        .battle-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #500080;
+        }
+
+        .hp-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+
+        .hp-bar {
+            height: 100%;
+            background: #00ff00;
+            width: 100%;
+            transition: width 0.5s;
+            border-radius: 5px;
+        }
+
+        /* --- 特訓モード --- */
+        #sakuranbo-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f0f8ff;
+            color: #333;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0s 0.5s;
+            padding-top: 20px;
+            visibility: hidden;
+            overflow: hidden;
+        }
+
+        #sakuranbo-screen.active {
+            transform: translateY(0);
+            visibility: visible;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0s 0s;
+        }
+
+        .s-header {
+            font-size: 1.5rem;
+            color: #6a0dad;
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #s-equation {
+            font-size: 3rem;
+            margin: 10px 0;
+            font-weight: bold;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .s-num {
+            background: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 4px solid #333;
+            min-width: 50px;
+            text-align: center;
+            transition: all 0.5s;
+        }
+
+        .s-num-changed {
+            color: #ff0055;
+            transform: scale(1.1);
+            border-color: #ff0055;
+        }
+
+        .s-result-active {
+            background: #fff !important;
+            border: 4px solid #ff9900 !important;
+            animation: pulse-orange 1s infinite;
+        }
+
+        #blocks-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            align-items: flex-start;
+            position: relative;
+            width: 100%;
+            justify-content: center;
+            padding-bottom: 100px;
+        }
+
+        .block-group {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            border: 2px dashed #ccc;
+        }
+
+        #left-group {
+            border: 4px solid #6a0dad;
+            background: #e6e6fa;
+            min-height: 80px;
+        }
+
+        .block {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            box-shadow: inset -3px -3px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .block-blue {
+            background: #00bfff;
+            border: 2px solid #0080ff;
+            pointer-events: none;
+        }
+
+        .block-red {
+            background: #ff4444;
+            border: 2px solid #cc0000;
+            cursor: pointer;
+        }
+
+        .block-red.clickable-hint {
+            animation: pulse-red 1s infinite;
+        }
+
+        .placeholder {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #ddd;
+            border: 2px dashed #bbb;
+        }
+
+        .moving-block {
+            position: absolute;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #input-overlay {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 15px;
+            border: 3px solid #ff9900;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 120;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) scale(0.8);
+            transition: all 0.3s;
+        }
+
+        #input-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) scale(1);
+        }
+
+        #s-input {
+            font-size: 2rem;
+            width: 80px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+
+        #s-ok-btn {
+            margin-top: 5px;
+            padding: 5px 20px;
+            background: #ff9900;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.2rem;
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes pulse-orange {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* --- スタート画面 --- */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            /* 明るいグラデーション */
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        #start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .title-logo {
+            font-size: 3rem;
+            color: #ffeb3b;
+            text-shadow: 0 0 20px #ff9800;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .mode-select-btn {
+            width: 80%;
+            max-width: 300px;
+            padding: 20px;
+            margin: 10px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        .mode-easy {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            box-shadow: 0 5px 0 #008a78;
+        }
+
+        .mode-hard {
+            background: linear-gradient(to right, #ff512f, #dd2476);
+            box-shadow: 0 5px 0 #bd185c;
+        }
+
+        .mode-select-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* --- モバイル対応 --- */
+        @media screen and (max-width: 500px) {
+            #battle-field {
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 10px;
+                gap: 0;
+            }
+
+            .sprite-window {
+                width: 150px;
+                height: 180px;
+                order: 1;
+            }
+
+            #enemy-area {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 10px;
+                align-self: center;
+                order: 0;
+            }
+
+            .esujira-wrapper,
+            .concon-wrapper,
+            .moguron-wrapper {
+                transform: scale(0.9);
+            }
+
+            .waruislyme-wrapper {
+                transform: scale(0.7);
+            }
+
+            .tatorun-wrapper {
+                transform: scale(0.8);
+            }
+
+            @keyframes slime-float {
+
+                0%,
+                100% {
+                    transform: scale(0.7) translateY(0px) scaleX(1);
+                }
+
+                50% {
+                    transform: scale(0.7) translateY(5px) scaleX(1.05);
+                }
+            }
+
+            #ui-panel {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+
+            #battle-q-box {
+                font-size: 2.5rem;
+                margin-bottom: 15px;
+            }
+
+            #battle-input {
+                font-size: 1.5rem;
+                width: 80px;
+            }
+
+            .battle-btn {
+                font-size: 1.2rem;
+                padding: 8px 20px;
+            }
+
+            #char-switch-btn {
+                width: 50px;
+                height: 50px;
+                top: -25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-container">
+
+        <div id="start-screen">
+            <div class="title-logo">エスジラの<br>けいさんバトル</div>
+            <button class="mode-select-btn mode-easy" onclick="startGame('easy')">かんたん<br><span
+                    style="font-size:1rem">(くりあがり なし)</span></button>
+            <button class="mode-select-btn mode-hard" onclick="startGame('hard')">ふつう<br><span
+                    style="font-size:1rem">(くりあがり あり)</span></button>
+        </div>
+
+        <div id="battle-screen">
+            <div style="width:90%; margin-top:20px; display:flex; justify-content:space-between;">
+                <div>Lv.<span id="level">1</span> <span id="player-name">エスジラ</span>
+                    <div class="hp-bar-container">
+                        <div id="player-hp" class="hp-bar"></div>
+                    </div>
+                </div>
+                <div style="text-align:right;"><span id="enemy-name">わるいスライム</span>
+                    <div class="hp-bar-container">
+                        <div id="enemy-hp" class="hp-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="battle-field">
+                <div class="sprite-window">
+                    <!-- エスジラ -->
+                    <div id="char-esujira" class="esujira-wrapper anim-stand active">
+                        <div class="skin-esujira"></div>
+                    </div>
+                    <!-- コンコン -->
+                    <div id="char-concon" class="concon-wrapper anim-stand">
+                        <div class="skin-concon"></div>
+                    </div>
+                    <!-- モグロン -->
+                    <div id="char-moguron" class="moguron-wrapper anim-stand">
+                        <div class="skin-moguron"></div>
+                    </div>
+
+                    <div id="beam"
+                        style="position:absolute; top:30%; left:50%; width:0; height:20px; background:#d88aff; opacity:0; transition:all 0.2s;">
+                    </div>
+                </div>
+
+                <div id="enemy-area">
+                    <div id="enemy-wrapper-1" class="waruislyme-wrapper anim-enemy-idle active">
+                        <div class="skin-waruislyme"></div>
+                    </div>
+                    <div id="enemy-wrapper-2" class="tatorun-wrapper anim-enemy-idle">
+                        <div class="skin-tatorun"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ui-panel">
+                <div id="battle-msg">もんだけいさん！</div>
+                <div style="font-size:0.8rem; color:#ffeb3b; margin-bottom:5px;">連勝: <span id="win-counter">0</span> / 5
+                </div>
+                <div id="battle-q-box">? + ? = ?</div>
+                <input type="tel" id="battle-input" placeholder="?">
+                <button class="battle-btn" onclick="checkBattleAnswer()">こうげき！</button>
+
+                <div id="char-switch-btn" onclick="toggleCharacter()">
+                    <div
+                        style="font-size:0.6rem; position:absolute; bottom:5px; width:100%; color:#333; font-weight:bold; z-index:10;">
+                        こうたい</div>
+                    <!-- プレビュー表示用 -->
+                    <div id="switch-preview-esujira" style="display:none;" class="mini-char-preview">
+                        <div class="skin-esujira"></div>
+                    </div>
+                    <div id="switch-preview-concon" style="display:none;" class="mini-char-preview">
+                        <div class="skin-concon"></div>
+                    </div>
+                    <div id="switch-preview-moguron" style="display:block;" class="mini-char-preview">
+                        <div class="skin-moguron"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sakuranbo-screen">
+            <div class="s-header">
+                <div class="icon-wrapper">
+                    <div class="icon-esujira">
+                        <div class="skin-esujira"></div>
+                    </div>
+                </div>
+                <span style="margin-left:10px;">とっくんモード！</span>
+            </div>
+            <div id="s-msg" style="margin-bottom:10px; color:#555;">あかい まる を タッチして 10 をつくろう</div>
+
+            <div id="s-equation">
+                <div id="s-num-left" class="s-num">?</div>
+                <span style="color:#aaa;">+</span>
+                <div id="s-num-right" class="s-num">?</div>
+                <span style="color:#aaa;">=</span>
+                <div id="s-num-result" class="s-num" style="background:#eee; color:#aaa;">?</div>
+            </div>
+
+            <div id="blocks-container">
+                <div id="left-group" class="block-group"></div>
+                <div style="font-size:2rem; color:#aaa; align-self:center;">+</div>
+                <div id="right-group" class="block-group" style="border-color:transparent; background:transparent;">
+                </div>
+
+                <div id="input-overlay">
+                    <div id="input-label" style="color:#ff9900; font-weight:bold; margin-bottom:5px;">あといくつ？</div>
+                    <input type="tel" id="s-input" autocomplete="off">
+                    <button id="s-ok-btn">OK</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* =========================================
+           共通・初期設定
+           ========================================= */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const synth = window.speechSynthesis;
+
+        // ゲーム状態
+        let level = 1;
+        let enemyHp = 100;
+        let playerHp = 100;
+        let currentQ = { a: 0, b: 0, ans: 0 };
+        let currentMode = 'hard'; // 'easy' or 'hard'
+        let currentChar = 'esujira'; // 'esujira' or 'concon' or 'moguron'
+        let consecutiveWins = 0; // 5勝でボス
+        let isBossActive = false;
+
+        // DOM要素 (バトル)
+        const battleScreen = document.getElementById('battle-screen');
+        const charEsujira = document.getElementById('char-esujira');
+        const charConcon = document.getElementById('char-concon');
+        const charMoguron = document.getElementById('char-moguron');
+        const battleInput = document.getElementById('battle-input');
+        const battleQBox = document.getElementById('battle-q-box');
+        const battleMsg = document.getElementById('battle-msg');
+        const enemyArea = document.getElementById('enemy-area');
+        const beamEl = document.getElementById('beam');
+
+        // DOM要素 (さくらんぼ)
+        const sakuranboScreen = document.getElementById('sakuranbo-screen');
+        const sNumLeft = document.getElementById('s-num-left');
+        const sNumRight = document.getElementById('s-num-right');
+        const sNumResult = document.getElementById('s-num-result');
+        const leftGroup = document.getElementById('left-group');
+        const rightGroup = document.getElementById('right-group');
+        const sMsg = document.getElementById('s-msg');
+        const inputOverlay = document.getElementById('input-overlay');
+        const inputLabel = document.getElementById('input-label');
+        const sInput = document.getElementById('s-input');
+        const sOkBtn = document.getElementById('s-ok-btn');
+
+        let sNeeded, sRemain, sMovedCount, sStep;
+
+        /* =========================================
+           音声・効果音
+           ========================================= */
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'ja-JP';
+            synth.speak(utter);
+        }
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'attack') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(1000, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start(); osc.stop(now + 0.5);
+            } else if (type === 'damage') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'correct') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(660, now); osc.frequency.setValueAtTime(880, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(); osc.stop(now + 0.4);
+            } else if (type === 'fanfare') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(523, now); osc.frequency.setValueAtTime(659, now + 0.1); osc.frequency.setValueAtTime(783, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                osc.start(); osc.stop(now + 0.6);
+            }
+        }
+
+        /* =========================================
+           バトルロジック
+           ========================================= */
+        function startGame(mode) {
+            currentMode = mode;
+            document.getElementById('start-screen').classList.add('hidden');
+            playSound('fanfare'); // スタート音代わり
+            initBattle();
+        }
+
+        function initBattle() { generateBattleProblem(); }
+
+        function generateBattleProblem() {
+            let a, b;
+
+            if (currentMode === 'easy') {
+                // 答えが9以下になる足し算
+                // a: 1〜8
+                a = Math.floor(Math.random() * 8) + 1;
+                // b: 1〜(9-a)
+                b = Math.floor(Math.random() * (9 - a)) + 1;
+            } else {
+                // existing logic: 繰り上がりあり (答えは11〜18程度になるように調整されていた元のロジック)
+                a = Math.floor(Math.random() * 4) + 6; // 6,7,8,9
+                const minB = (10 - a) + 1;
+                b = Math.floor(Math.random() * (9 - minB + 1)) + minB;
+            }
+
+            currentQ = { a: a, b: b, ans: a + b };
+            battleQBox.innerText = `${a} + ${b} = ?`;
+            battleInput.value = '';
+            battleMsg.innerText = "けいさんして こうげきだ！";
+            setBattleAction('anim-stand');
+            // 入力欄に自動フォーカス
+            setTimeout(() => battleInput.focus(), 100);
+        }
+
+        function setBattleAction(actionClass) {
+            // 現在のキャラにクラス適用
+            const target = (currentChar === 'esujira') ? charEsujira : (currentChar === 'concon') ? charConcon : charMoguron;
+            const baseClass = (currentChar === 'esujira') ? 'esujira-wrapper' : (currentChar === 'concon') ? 'concon-wrapper' : 'moguron-wrapper';
+            target.className = `${baseClass} ${actionClass} active`;
+        }
+
+        // キャラ切り替え
+        function toggleCharacter() {
+            // エスジラ → コンコン → モグロン → エスジラ のループ
+            if (currentChar === 'esujira') {
+                currentChar = 'concon';
+                document.getElementById('player-name').innerText = "コンコン";
+                charEsujira.classList.remove('active');
+                charConcon.classList.add('active');
+                charMoguron.classList.remove('active');
+                document.getElementById('switch-preview-esujira').style.display = 'none';
+                document.getElementById('switch-preview-concon').style.display = 'none';
+                document.getElementById('switch-preview-moguron').style.display = 'block';
+            } else if (currentChar === 'concon') {
+                currentChar = 'moguron';
+                document.getElementById('player-name').innerText = "モグロン";
+                charEsujira.classList.remove('active');
+                charConcon.classList.remove('active');
+                charMoguron.classList.add('active');
+                document.getElementById('switch-preview-esujira').style.display = 'block';
+                document.getElementById('switch-preview-concon').style.display = 'none';
+                document.getElementById('switch-preview-moguron').style.display = 'none';
+            } else {
+                currentChar = 'esujira';
+                document.getElementById('player-name').innerText = "エスジラ";
+                charConcon.classList.remove('active');
+                charMoguron.classList.remove('active');
+                charEsujira.classList.add('active');
+                document.getElementById('switch-preview-esujira').style.display = 'none';
+                document.getElementById('switch-preview-concon').style.display = 'block';
+                document.getElementById('switch-preview-moguron').style.display = 'none';
+            }
+            setBattleAction('anim-stand');
+            playSound('pop');
+        }
+
+        function checkBattleAnswer() {
+            console.log('checkBattleAnswer関数が呼ばれました'); // デバッグ用
+            const val = parseInt(battleInput.value);
+            if (isNaN(val)) return;
+
+            if (val === currentQ.ans) {
+                performAttack(false);
+            } else {
+                battleMsg.innerText = "あ！ まちがいだ！";
+                playSound('damage');
+                setBattleAction('anim-damage');
+
+                if (currentMode === 'hard') {
+                    setTimeout(() => {
+                        battleMsg.innerText = "とっくんモードへ！";
+                        startSakuranboMode();
+                    }, 1000);
+                } else {
+                    // Easyモードはヒントだけ出して継続
+                    setTimeout(() => {
+                        battleMsg.innerText = "もういちど チャレンジ！";
+                        setBattleAction('anim-stand');
+                        battleInput.value = '';
+                        battleInput.focus();
+                    }, 1500);
+                }
+            }
+        }
+
+        function performAttack(isCounter) {
+            if (isCounter) {
+                battleMsg.innerText = "とっくんせいこう！ ひっさつカウンター！";
+                speak("とっくんせいこう！ ひっさつカウンター！");
+            } else {
+                battleMsg.innerText = "エスジラの サイコビーム！";
+                playSound('attack');
+            }
+
+            setBattleAction('anim-attack');
+
+            setTimeout(() => {
+                beamEl.style.width = '100%'; beamEl.style.opacity = '1'; beamEl.style.left = '100%';
+            }, 100);
+
+            setTimeout(() => {
+                // HP減少処理の前にボスイベントチェック
+                const dmg = isCounter ? 50 : 34;
+                enemyHp -= dmg;
+                updateHp();
+
+                setTimeout(() => {
+                    beamEl.style.width = '0'; beamEl.style.opacity = '0'; beamEl.style.left = '50%';
+
+                    // ボス戦じゃなくて、HPが0になったらレベルアップ＆カウント
+                    if (!isBossActive && enemyHp <= 0) {
+                        consecutiveWins++;
+                        console.log('連勝カウント:', consecutiveWins); // デバッグ用
+                        document.getElementById('win-counter').innerText = consecutiveWins; // カウンター表示更新
+                        if (consecutiveWins >= 5) {
+                            // ボス出現！
+                            console.log('ボス出現条件達成！');
+                            appearBoss();
+                        } else {
+                            levelUp();
+                        }
+                    } else if (isBossActive && enemyHp <= 0) {
+                        // ボス撃破（クリア！）
+                        gameClear();
+                    } else {
+                        enemyArea.classList.remove('enemy-hit');
+                        setBattleAction('anim-stand');
+                        generateBattleProblem();
+                    }
+                }, 500);
+            }, 400);
+        }
+
+        function updateHp() {
+            document.getElementById('enemy-hp').style.width = Math.max(0, enemyHp) + '%';
+            document.getElementById('player-hp').style.width = Math.max(0, playerHp) + '%';
+        }
+
+        function appearBoss() {
+            isBossActive = true;
+            enemyHp = 100; // ボスHP
+            updateHp();
+            document.getElementById('enemy-name').innerText = "???"; // 一瞬???
+
+            // アニメーション
+            const slime = document.getElementById('enemy-wrapper-1');
+            slime.style.transition = "all 1s";
+            slime.style.transform = "scale(0) rotate(360deg)";
+            slime.style.opacity = "0";
+
+            playSound('damage'); // 変化音代わり
+
+            setTimeout(() => {
+                slime.classList.remove('active');
+                const boss = document.getElementById('enemy-wrapper-2');
+                boss.classList.add('active');
+                boss.style.opacity = "0";
+
+                setTimeout(() => {
+                    boss.style.transition = "opacity 1s";
+                    boss.style.opacity = "1";
+                    document.getElementById('enemy-name').innerText = "魔王タトルン";
+                    document.getElementById('enemy-name').style.color = "#ff0055";
+                    document.getElementById('enemy-name').style.fontWeight = "bold";
+                    battleMsg.innerText = "魔王タトルン が あらわれた！";
+                    speak("魔王タトルンがあらわれた！");
+
+                    // ボス戦BGMっぽい雰囲気出したいけど音源ないのでファンファーレで代用
+                    playSound('fanfare');
+
+                    setTimeout(generateBattleProblem, 2000);
+                }, 100);
+            }, 1000);
+        }
+
+        function gameClear() {
+            playSound('fanfare');
+            battleMsg.innerText = "タトルンを たおした！ せかいに へいわが もどった！";
+            speak("おめでとう！タトルンをたおしたよ！");
+            document.getElementById('enemy-wrapper-2').classList.add('enemy-hit'); // 吹っ飛ぶ演出とかあればいいけどとりあえず揺らす
+            setTimeout(() => {
+                document.getElementById('enemy-wrapper-2').style.transition = "transform 2s";
+                document.getElementById('enemy-wrapper-2').style.transform = "scale(0) translateY(-100px)";
+            }, 1000);
+        }
+
+        function levelUp() {
+            enemyArea.classList.remove('enemy-hit');
+            level++;
+            document.getElementById('level').innerText = level;
+            enemyHp = 100;
+            playerHp = 100;
+            updateHp();
+            battleMsg.innerText = "やった！ レベルアップ！";
+            speak("レベルアップ！");
+            setBattleAction('anim-run');
+
+            // 10勝チェックは敵撃破時に行っているのでここではリセットしない
+            // consecutiveWins = 0; // これは書かない
+
+            setTimeout(generateBattleProblem, 2000);
+        }
+
+        /* =========================================
+           特訓モードロジック
+           ========================================= */
+        function startSakuranboMode() {
+            battleScreen.style.filter = "blur(5px)";
+            sakuranboScreen.classList.add('active');
+
+            const a = currentQ.a;
+            const b = currentQ.b;
+            sNeeded = 10 - a;
+            sRemain = b - sNeeded;
+            sMovedCount = 0;
+            sStep = 0;
+
+            sNumLeft.innerText = a; sNumRight.innerText = b; sNumResult.innerText = "?";
+            sNumLeft.className = 's-num'; sNumRight.className = 's-num';
+            sNumResult.className = 's-num'; sNumResult.style.background = "#eee"; sNumResult.classList.remove('s-result-active');
+
+            sMsg.innerText = "あかい まる を タッチして 10 をつくろう";
+            speak("あかいまるをタッチして、10をつくろう！");
+            hideInput();
+
+            renderSakuranboBlocks(a, b);
+        }
+
+        function renderSakuranboBlocks(a, b) {
+            leftGroup.innerHTML = ''; rightGroup.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const div = document.createElement('div');
+                if (i < a) { div.className = 'block block-blue'; div.id = `l-fill-${i}`; }
+                else { div.className = 'placeholder'; div.id = `l-slot-${i}`; }
+                leftGroup.appendChild(div);
+            }
+            for (let i = 0; i < b; i++) {
+                const div = document.createElement('div');
+                div.className = 'block block-red clickable-hint';
+                div.id = `r-block-${i}`;
+                div.onclick = () => handleBlockClick(div, i);
+                rightGroup.appendChild(div);
+            }
+        }
+
+        function handleBlockClick(blockEl, index) {
+            if (sStep !== 0) return;
+            if (sMovedCount >= sNeeded) return;
+
+            const targetIndex = currentQ.a + sMovedCount;
+            const targetSlot = document.getElementById(`l-slot-${targetIndex}`);
+
+            if (targetSlot) {
+                playSound('pop');
+                blockEl.classList.remove('clickable-hint'); blockEl.onclick = null;
+
+                const rB = blockEl.getBoundingClientRect();
+                const bodyR = document.body.getBoundingClientRect();
+
+                const clone = blockEl.cloneNode(true);
+                clone.className = 'block block-red moving-block';
+                clone.style.width = rB.width + 'px'; clone.style.height = rB.height + 'px';
+                clone.style.left = (rB.left - bodyR.left) + 'px';
+                clone.style.top = (rB.top - bodyR.top) + 'px';
+                document.body.appendChild(clone);
+
+                blockEl.className = 'placeholder'; blockEl.style.opacity = '0.3';
+
+                const rS = targetSlot.getBoundingClientRect();
+                setTimeout(() => {
+                    clone.style.left = (rS.left - bodyR.left) + 'px';
+                    clone.style.top = (rS.top - bodyR.top) + 'px';
+                }, 10);
+
+                setTimeout(() => {
+                    clone.remove();
+                    targetSlot.className = 'block block-red';
+                    sMovedCount++;
+                    if (sMovedCount >= sNeeded) {
+                        playSound('correct');
+                        sMsg.innerText = "10個 に なったね！";
+                        for (let k = 0; k < currentQ.b; k++) {
+                            const el = document.getElementById(`r-block-${k}`);
+                            if (el) el.classList.remove('clickable-hint');
+                        }
+                        setTimeout(sakuranboStep1, 1000);
+                    }
+                }, 550);
+            }
+        }
+
+        function showInput(targetEl, label) {
+            inputOverlay.classList.add('visible');
+            inputLabel.innerText = label;
+            sInput.value = '';
+
+            const cRect = document.getElementById('blocks-container').getBoundingClientRect();
+            const tRect = targetEl.getBoundingClientRect();
+            const left = tRect.left - cRect.left + tRect.width / 2;
+            const top = tRect.bottom - cRect.top + 15;
+
+            inputOverlay.style.top = top + 'px';
+            inputOverlay.style.left = left + 'px';
+            setTimeout(() => sInput.focus(), 100);
+        }
+        function hideInput() { inputOverlay.classList.remove('visible'); sInput.blur(); }
+
+        function sakuranboStep1() {
+            sStep = 1;
+            sMsg.innerText = "いま、いくつ うごかした？";
+            speak("いま、いくつ動かした？");
+            showInput(leftGroup, "うごかした数は？");
+        }
+        function sakuranboStep2() {
+            sStep = 2;
+            sMsg.innerText = "のこり は いくつ？";
+            speak("残りはいくつ？");
+            showInput(rightGroup, "のこりは？");
+        }
+        function sakuranboStep3() {
+            sStep = 3;
+            sNumLeft.classList.add('s-num-changed'); sNumLeft.innerText = "10";
+            setTimeout(() => {
+                sNumRight.classList.add('s-num-changed'); sNumRight.innerText = sRemain;
+                sNumResult.classList.add('s-result-active'); sNumResult.style.background = "#fff";
+                sMsg.innerText = `10 と ${sRemain} で、こたえは？`;
+                speak(`10と${sRemain}で、こたえは？`);
+
+                inputOverlay.classList.add('visible');
+                inputLabel.innerText = "こたえは？";
+                sInput.value = '';
+                inputOverlay.style.top = "-50px";
+                inputOverlay.style.left = "50%";
+                setTimeout(() => sInput.focus(), 100);
+            }, 500);
+        }
+
+        function checkSakuranboInput() {
+            const val = parseInt(sInput.value);
+            if (isNaN(val)) return;
+
+            if (sStep === 1) {
+                if (val === sNeeded) { playSound('correct'); hideInput(); setTimeout(sakuranboStep2, 500); }
+                else { playSound('damage'); sMsg.innerText = "ちがうよ！ 左のあかいブロックをかぞえて！"; }
+            } else if (sStep === 2) {
+                if (val === sRemain) { playSound('correct'); hideInput(); setTimeout(sakuranboStep3, 500); }
+                else { playSound('damage'); sMsg.innerText = "ちがうよ！ 右のうすいブロックをかぞえて！"; }
+            } else if (sStep === 3) {
+                if (val === currentQ.ans) { finishSakuranbo(); }
+                else { playSound('damage'); sMsg.innerText = `10 と ${sRemain} だよ！`; }
+            }
+        }
+
+        function finishSakuranbo() {
+            sNumResult.innerText = currentQ.ans;
+            sNumResult.classList.remove('s-result-active');
+            sNumResult.classList.add('s-num-changed');
+            playSound('fanfare');
+            speak("だいせいかい！ バトルにもどるよ！");
+            hideInput();
+
+            setTimeout(() => {
+                sakuranboScreen.classList.remove('active');
+                battleScreen.style.filter = "none";
+                battleInput.value = currentQ.ans;
+                setTimeout(() => { performAttack(true); }, 800);
+            }, 2000);
+        }
+
+        sOkBtn.addEventListener('click', checkSakuranboInput);
+        sInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkSakuranboInput(); });
+
+        // バトル入力のエンターキー対応
+        battleInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                console.log('Enterキーが押されました'); // デバッグ用
+                checkBattleAnswer();
+            }
+        });
+
+        // initBattle(); // 削除: スタートボタンで開始する
+
+    </script>
+</body>
+
+</html>
