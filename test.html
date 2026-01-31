@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テスト版</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 3rem;
+            margin: 20px 0;
+        }
+
+        input {
+            font-size: 2rem;
+            width: 100px;
+            text-align: center;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        button {
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            background: #ff0080;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            margin-top: 20px;
+        }
+
+        .character {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎮 けいさんバトル</h1>
+        <div class="character">🦕 VS 👾</div>
+        <div class="question" id="question">? + ? = ?</div>
+        <input type="tel" id="answer" placeholder="?">
+        <br>
+        <button onclick="check()">こうげき！</button>
+        <div class="result" id="result"></div>
+    </div>
+    <script>
+        let a, b;
+        function newQuestion() {
+            a = Math.floor(Math.random() * 9) + 1;
+            b = Math.floor(Math.random() * 9) + 1;
+            document.getElementById('question').textContent = a + ' + ' + b + ' = ?';
+            document.getElementById('answer').value = '';
+            document.getElementById('result').textContent = '';
+        }
+        function check() {
+            const ans = parseInt(document.getElementById('answer').value);
+            if (ans === a + b) {
+                document.getElementById('result').textContent = '🎉 せいかい！';
+                setTimeout(newQuestion, 1500);
+            } else {
+                document.getElementById('result').textContent = '❌ もういちど！';
+            }
+        }
+        newQuestion();
+    </script>
+</body>
+
+</html>
+</CodeContent>
+<parameter name="EmptyFile">false
